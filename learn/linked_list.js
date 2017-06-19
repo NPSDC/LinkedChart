@@ -38,6 +38,7 @@ function Node(id)
   this.parent = null;
   this.cum_height = 0;
   this.x = null;
+  this.color = 'black';
 }
      
 function Tree(id)
@@ -100,3 +101,122 @@ var traverse = function(node)
 	};
 
 
+var draw_dendo = function(node, svg, scale, cla, inds, prop)
+		{
+			var class_req =  check_ele(node.id, inds) ? cla[1]:cla[0];
+
+			//console.log(inds);
+			if(node.right != null && node.left != null)
+			{
+					svg.append("line")
+					.attr("x1", node.left.x)
+					.attr("x2", node.right.x)
+					.attr("y1", node.cum_height*scale)
+					.attr("y2", node.cum_height*scale)
+					.attr("id", node.id)	
+					.attr("type", "h")
+					.attr("class", class_req);
+
+				draw_dendo(node.left, svg, scale, cla, inds, prop);
+				draw_dendo(node.right, svg, scale, cla, inds,prop);
+			}
+			if(node.parent != null)
+			{
+				if(prop == node.id)
+				 class_req = cla[0];
+				
+			
+				svg.append("line")
+			   	.attr("x1", node.x)
+			   	.attr("x2", node.x)
+			   	.attr("y1", node.parent.cum_height*scale)
+			   	.attr("y2", node.cum_height*scale)
+			   	.attr("id", node.id)
+			   	.attr("type", "v")
+			   	.attr("class", class_req);
+
+
+			   	if(node.left == null && node.right == null)
+			   	{
+				   	svg.append("text")
+				   	.attr("x", node.x )
+				   	.attr("y", node.cum_height*scale + scale * 0.2)
+				   	.text(String(node.id))
+				   	.attr("text-anchor", "middle")
+				   	//.attr("font-family", "sans-serif")
+			   		//.attr("font-size", scale)
+			   		.attr("fill", "red");
+			   		//.attr("transform", "rotate(45 -10 10)");
+			   }
+			}
+			return;
+		}
+
+var find_node = function(node, id)
+{	
+	if(node != null)
+	{
+		if(node.id == id)
+			return node;
+		else 
+			return find_node(node.left,id) || find_node(node.right, id);
+	}
+	return null;
+}
+
+var check_ele = function(ele, ind_arr)
+{
+	for(var i = 0; i < ind_arr.length; i++)
+	{
+		if(ind_arr[i] == ele)
+			return true;
+	}
+	return false;
+}
+var change_prop = function(root_node, id_and_type, svg, scale, cla)
+{
+	//console.log(root_node);
+	//console.log(id_and_type[0]);
+	node_req = find_node(root_node, id_and_type[0]);
+	inds = [];
+	var prop = -1;
+	
+	add_ids(node_req, inds);
+	if(id_and_type[1] == 'h')
+	{
+		prop = id_and_type[0];
+
+	}
+	//console.log(inds);
+
+	svg.selectAll('line').remove();
+	draw_dendo(root_node, svg, scale, cla, inds, prop);
+	set_click();
+}
+
+var set_click = function()
+{
+	d3.selectAll('line').on('click', function(d){console.log(this.type);
+	change_prop(mytree.root, [this.id, this.type], svg, scale, ['normal', 'selected']);});
+}
+
+var add_ids = function(node, inds)
+{
+	inds.push(node.id);
+	if(node.left != null)
+		add_ids(node.left, inds);
+	if(node.right != null)
+		add_ids(node.right, inds);
+}
+/*var set_color = function(node, color)
+{
+	if(node.left != null && node.right != null)
+	{
+		var children = [node.left, node.right];
+		for(var i = 0; i < children.length; i++)
+			children[i].color = children[i].parent.color;
+	}
+}*/
+
+
+//Issue of Memory vs time
