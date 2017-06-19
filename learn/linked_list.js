@@ -101,11 +101,9 @@ var traverse = function(node)
 	};
 
 
-var draw_dendo = function(node, svg, scale, cla, inds, prop)
+var draw_dendo = function(node, svg, scale)
 		{
-			var class_req =  check_ele(node.id, inds) ? cla[1]:cla[0];
 
-			//console.log(inds);
 			if(node.right != null && node.left != null)
 			{
 					svg.append("line")
@@ -115,16 +113,12 @@ var draw_dendo = function(node, svg, scale, cla, inds, prop)
 					.attr("y2", node.cum_height*scale)
 					.attr("id", node.id)	
 					.attr("orient", "h")
-					.attr("class", class_req);
-
-				draw_dendo(node.left, svg, scale, cla, inds, prop);
-				draw_dendo(node.right, svg, scale, cla, inds,prop);
+					.attr("class", "normal");
+				draw_dendo(node.left, svg, scale);
+				draw_dendo(node.right, svg, scale);
 			}
 			if(node.parent != null)
 			{
-				if(prop == node.id)
-				 class_req = cla[0];
-				
 			
 				svg.append("line")
 			   	.attr("x1", node.x)
@@ -133,9 +127,7 @@ var draw_dendo = function(node, svg, scale, cla, inds, prop)
 			   	.attr("y2", node.cum_height*scale)
 			   	.attr("id", node.id)
 			   	.attr("orient", "v")
-			   	.attr("class", class_req);
-
-
+			   	.attr("class", "normal");
 			   	if(node.left == null && node.right == null)
 			   	{
 				   	svg.append("text")
@@ -176,7 +168,6 @@ var check_ele = function(ele, ind_arr)
 var change_prop = function(root_node, id_and_type, svg, scale, cla)
 {
 	//console.log(root_node);
-	//console.log(id_and_type[0]);
 	node_req = find_node(root_node, id_and_type[0]);
 	inds = [];
 	var prop = -1;
@@ -187,17 +178,15 @@ var change_prop = function(root_node, id_and_type, svg, scale, cla)
 		prop = id_and_type[0];
 
 	}
-	//console.log(inds);
+	set_color(svg, [], cla, -1);
+	set_color(svg, inds, cla, prop);
 
-	svg.selectAll('line').remove();
-	draw_dendo(root_node, svg, scale, cla, inds, prop);
-	set_click();
 }
 
-var set_click = function()
+var set_click = function(root, svg, scale, cla)
 {
-	d3.selectAll('line').on('click', function(d){console.log(this.getAttribute('orient'));
-	change_prop(mytree.root, [this.getAttribute('id'), this.getAttribute('orient')], svg, scale, ['normal', 'selected']);});
+	d3.selectAll('line').on('click', function(d){
+	change_prop(root, [this.getAttribute('id'), this.getAttribute('orient')], svg, scale, cla);});
 }
 
 var add_ids = function(node, inds)
@@ -208,15 +197,17 @@ var add_ids = function(node, inds)
 	if(node.right != null)
 		add_ids(node.right, inds);
 }
-/*var set_color = function(node, color)
+
+var set_color = function(svg, inds, cla, prop)
 {
-	if(node.left != null && node.right != null)
+	svg.selectAll('line').attr("class", function(d)
 	{
-		var children = [node.left, node.right];
-		for(var i = 0; i < children.length; i++)
-			children[i].color = children[i].parent.color;
-	}
-}*/
+		//console.log(this.id)
+		if(prop == this.id && this.getAttribute('orient') == 'v')
+			return cla[0];
+		return check_ele(this.id, inds) ? cla[1]:cla[0];
+	});
+}
 
 
 //Issue of Memory vs time
