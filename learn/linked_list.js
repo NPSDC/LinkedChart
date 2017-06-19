@@ -114,7 +114,7 @@ var draw_dendo = function(node, svg, scale, cla, inds, prop)
 					.attr("y1", node.cum_height*scale)
 					.attr("y2", node.cum_height*scale)
 					.attr("id", node.id)	
-					.attr("type", "h")
+					.attr("orient", "h")
 					.attr("class", class_req);
 
 				draw_dendo(node.left, svg, scale, cla, inds, prop);
@@ -132,7 +132,7 @@ var draw_dendo = function(node, svg, scale, cla, inds, prop)
 			   	.attr("y1", node.parent.cum_height*scale)
 			   	.attr("y2", node.cum_height*scale)
 			   	.attr("id", node.id)
-			   	.attr("type", "v")
+			   	.attr("orient", "v")
 			   	.attr("class", class_req);
 
 
@@ -196,8 +196,8 @@ var change_prop = function(root_node, id_and_type, svg, scale, cla)
 
 var set_click = function()
 {
-	d3.selectAll('line').on('click', function(d){console.log(this.type);
-	change_prop(mytree.root, [this.id, this.type], svg, scale, ['normal', 'selected']);});
+	d3.selectAll('line').on('click', function(d){console.log(this.getAttribute('orient'));
+	change_prop(mytree.root, [this.getAttribute('id'), this.getAttribute('orient')], svg, scale, ['normal', 'selected']);});
 }
 
 var add_ids = function(node, inds)
