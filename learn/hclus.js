@@ -1,3 +1,4 @@
+//require('./iris_temp')
 
 function createGround(width, height){
     var result = new Array(width);
@@ -55,7 +56,16 @@ var bucket_dist = function(el1_inds, el2_inds, dist_mat)
 	return max_dist;
 }
 
-var data = createGround(10,20);
+//var data = createGround(10,20);
+var data = new Array(5);
+keys = Object.keys(iris[0])
+for(var i = 0; i < 5; i++)
+{
+	data[i] = new Array(keys.length);
+	for(var j = 0; j < keys.length; j++)
+		data[i][j] = iris[i][keys[j]];
+}
+console.log(data);
 var bucket = []
 //Initialisation
 for(var i = 0; i < data.length; i++)
@@ -74,27 +84,29 @@ var merge = function(bucket, dist_mat)
 		var to_rem = [0,1];
 		for(var i = 0; i < bucket_copy.length; i++)
 		{
-			for(var j = i + 1; j < bucket_copy.length; j++)
+			for(var j = i+1;  j < bucket_copy.length; j++)
 			{
 				 var dis = bucket_dist(bucket_copy[i].val_inds, bucket_copy[j].val_inds, dist_mat);
 				 if(dis < min_dis)
 				 {
-				 	dis = min_dis
+				 	min_dis = dis;
 				 	to_clus = [bucket_copy[i], bucket_copy[j]];
 				 	to_rem = [i,j];
 				 }
 			}
 		}
-		
+		console.log(min_dis);
 		var new_node = new Node(cur_count+1, null);
 		new_node.left = to_clus[0];
 		new_node.right = to_clus[1];
+		new_node.height = min_dis;
 		new_node.val_inds = new_node.left.val_inds.concat(new_node.right.val_inds);
 		to_rem.sort(function(a,b){return b-a});
 		bucket_copy.splice(to_rem[0],1);
 		bucket_copy.splice(to_rem[1],1);
 		bucket_copy.push(new_node);
 		cur_count += 1;
+		//break;
 	}
 	return bucket_copy
 }
