@@ -28,17 +28,18 @@ function List(){
 }
 
 
-function Node(id)
+function Node(id, val)
 {
   this.id = id;
+  this.val = val;
   this.left = null;
   this.right = null;
-  this.left_height = null;
-  this.right_height = null;
+  //this.left_height = null;
+  //this.right_height = null;
   this.parent = null;
-  this.cum_height = 0;
+  this.height = 0;
   this.x = null;
-  this.color = 'black';
+  this.val_inds = [id];
 }
      
 function Tree(id)
@@ -203,8 +204,8 @@ var set_color = function(svg, inds, cla, prop)
 	svg.selectAll('line').attr("class", function(d)
 	{
 		//console.log(this.id)
-		if(prop == this.id && this.getAttribute('orient') == 'v')
-			return cla[0];
+		//if(prop == this.id && this.getAttribute('orient') == 'v')
+		//	return cla[0];
 		return check_ele(this.id, inds) ? cla[1]:cla[0];
 	});
 }
