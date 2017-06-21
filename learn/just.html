@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<script src="iris.js" type="text/javascript"></script>
 		<script src="iris_temp.js" type="text/javascript"></script>
 		<script src = "linked_list.js" type="text/javascript"></script>
 		 <script src="hclus.js" type="text/javascript"></script>
@@ -20,13 +21,17 @@
 	<body>
 		<script>
 			var width = 1000;
-			var height = 1000;
+			var height = 400;
+			var padding = 20;
 		
 			var svg = d3.select("body").append("svg")
 			 .attr("width", width )
 			 .attr("height", height);
 
-
+			set_x(b[0]);
+			scales = set_scale(b[0], padding, width, height);
+			draw_dendo(b[0], svg, scales, padding);
+			set_click(b[0], svg,  ['normal', 'selected']);
 			//Setting the data
 			/*var mytree = new Tree(1);
 			mytree.add_right(3, 2);
@@ -47,17 +52,11 @@
 			mytree.add_left(10, 11);
 			mytree.add_right(11, 11);*/
 			
-			set_x(b[0], scale);
-			n_leaf = 0;
-			//////
-
-
-			var xScale = d3.scale.linear()
-						   .domain([1, ])
-
-			  
-			draw_dendo(b[0], svg, scale);
-			set_click(b[0], svg,  ['normal', 'selected']);
+			//set_x(b[0], scale);
+			
+			
+			//draw_dendo(b[0], svg, scale);
+			//set_click(b[0], svg,  ['normal', 'selected']);
 		</script>
 	</body>
 </html>

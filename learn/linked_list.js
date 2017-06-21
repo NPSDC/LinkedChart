@@ -69,19 +69,19 @@ function Tree(id)
 
 }
 
-var n_leaf = 0;
-var set_x =	function(node, scale)
+var n_count = 0;
+var set_x =	function(node)
 {
 	if(node.right == null && node.left == null)
 	{
-		node.x = scale*n_leaf + scale;
-		n_leaf++;
+		node.x = n_count;
+		n_count++;
 		return;
 	}
 	if(node.left.x == null)
-		set_x(node.left, scale);
+		set_x(node.left);
 	if(node.right.x == null)
-		set_x(node.right, scale);
+		set_x(node.right);
 	node.x = (node.right.x + node.left.x)/2 ;
 	return;
 }
@@ -103,16 +103,16 @@ var traverse = function(node)
 };
 
 
-var draw_dendo = function(node, svg, scale)
+var draw_dendo = function(node, svg, scales, padding)
 {
 	var height = svg.style()[0][0].getAttribute("height");
 	if(node.right != null && node.left != null)
 	{
 		svg.append("line")
-		.attr("x1", node.left.x)
-		.attr("x2", node.right.x)
-		.attr("y1", node.height*scale)
-		.attr("y2", node.height*scale)
+		.attr("x1", scales[0](node.left.x))
+		.attr("x2", scales[0](node.right.x))
+		.attr("y1", scales[1](node.height))
+		.attr("y2", scales[1](node.height))
 		.attr("id", node.id)	
 		.attr("orient", "h")
 		.attr("class", "normal");
@@ -121,24 +121,24 @@ var draw_dendo = function(node, svg, scale)
 		for(var i = 0; i < children.length; i++)
 		{
 			svg.append("line")
-			.attr("x1", children[i].x)
-			.attr("x2", children[i].x)
-			.attr("y1",  node.height*scale)
-			.attr("y2", children[i].height*scale)
+			.attr("x1", scales[0](children[i].x))
+			.attr("x2", scales[0](children[i].x))
+			.attr("y1",  scales[1](node.height))
+			.attr("y2", scales[1](children[i].height))
 			.attr("id", children[i].id)
 			.attr("orient", "v")
 			.attr("class", "normal");
 		}
 		
-		draw_dendo(node.left, svg, scale);
-		draw_dendo(node.right, svg, scale);
+		draw_dendo(node.left, svg, scales, padding);
+		draw_dendo(node.right, svg, scales, padding);
 	}
 
    	if(node.left == null && node.right == null)
    	{
 	   	svg.append("text")
-	   	.attr("x", node.x )
-	   	.attr("y", node.height*scale + scale * 0.2)
+	   	.attr("x", scales[0](node.x ))
+	   	.attr("y", scales[1](node.height) + padding)
 	   	.text(String(node.id))
 	   	.attr("text-anchor", "middle")
 	   	//.attr("font-family", "sans-serif")
@@ -207,9 +207,6 @@ var set_color = function(svg, inds, cla, prop)
 {
 	svg.selectAll('line').attr("class", function(d)
 	{
-		//console.log(this.id)
-		//if(prop == this.id && this.getAttribute('orient') == 'v')
-		//	return cla[0];
 		return check_ele(this.id, inds) ? cla[1]:cla[0];
 	});
 }

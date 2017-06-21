@@ -57,15 +57,16 @@ var bucket_dist = function(el1_inds, el2_inds, dist_mat)
 }
 
 //var data = createGround(10,20);
-var data = new Array(5);
-keys = Object.keys(iris[0])
-for(var i = 0; i < 5; i++)
+da = iris_temp
+var data = new Array(da.length);
+keys = Object.keys(da[0])
+for(var i = 0; i < da.length; i++)
 {
 	data[i] = new Array(keys.length);
 	for(var j = 0; j < keys.length; j++)
-		data[i][j] = iris[i][keys[j]];
+		data[i][j] = da[i][keys[j]];
 }
-console.log(data);
+//console.log(data);
 var bucket = []
 //Initialisation
 for(var i = 0; i < data.length; i++)
@@ -95,7 +96,7 @@ var merge = function(bucket, dist_mat)
 				 }
 			}
 		}
-		console.log(min_dis);
+		//console.log(min_dis);
 		var new_node = new Node(cur_count+1, null);
 		new_node.left = to_clus[0];
 		new_node.right = to_clus[1];
@@ -111,4 +112,15 @@ var merge = function(bucket, dist_mat)
 	return bucket_copy
 }
 
+var set_scale = function(bucket_final, padding, width, height)
+{
+	var n_leaves = bucket_final.val_inds.length;
+	var xScale = d3.scale.linear()
+				   .domain([0, n_leaves-1])
+				   .range([padding, width-padding]);
+	var yScale = d3.scale.linear()			   
+					.domain([0, bucket_final.height])
+					.range([height-padding, padding]);
+	return [xScale, yScale];
+}
 b = merge(bucket, dist_mat)
