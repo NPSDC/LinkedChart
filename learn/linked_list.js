@@ -1,9 +1,5 @@
-/*function linked_list()
-{
-	return{
 
-	}
-};*/
+
 function List(){
 	this.start = null;
 	this.end = null;
@@ -40,6 +36,22 @@ function Node(id, val)
   this.height = 0;
   this.x = null;
   this.val_inds = [id];
+
+  var traverse = function()
+	{
+		//console.log(node.id);
+		//if(node == null)
+		//	return;
+		if(this.left == null && this.right == null)
+			console.log(this.id, this.height);
+		var children = [this.left, this.right];
+		for(var i = 0; i < children.length; i++	)
+		{
+			if(children[i] != null)
+					traverse(children[i]);
+		}
+		return;
+	};
 }
      
 function Tree(id)
@@ -67,148 +79,159 @@ function Tree(id)
 		this.curNode = node;
 	}
 
+
 }
 
-var n_count = 0;
-var set_x =	function(node)
-{
-	if(node.right == null && node.left == null)
-	{
-		node.x = n_count;
-		n_count++;
-		return;
-	}
-	if(node.left.x == null)
-		set_x(node.left);
-	if(node.right.x == null)
-		set_x(node.right);
-	node.x = (node.right.x + node.left.x)/2 ;
-	return;
-}
-
-var traverse = function(node)
-{
-	//console.log(node.id);
-	//if(node == null)
-	//	return;
-	if(node.left == null && node.right == null)
-		console.log(node.id, node.cum_height);
-	var children = [node.left, node.right];
-	for(var i = 0; i < children.length; i++	)
-	{
-		if(children[i] != null)
-				traverse(children[i]);
-	}
-	return;
-};
-
-
-var draw_dendo = function(node, svg, scales, padding)
+var drawDendo = function(node, svg, padding)
 {
 	var height = svg.style()[0][0].getAttribute("height");
-	if(node.right != null && node.left != null)
+	var g = svg.append('g');
+			   		  
+	var n_count = 0;
+	var set_x =	function(node)
 	{
-		svg.append("line")
-		.attr("x1", scales[0](node.left.x))
-		.attr("x2", scales[0](node.right.x))
-		.attr("y1", scales[1](node.height))
-		.attr("y2", scales[1](node.height))
-		.attr("id", node.id)	
-		.attr("orient", "h")
-		.attr("class", "normal");
-
-		var children = [node.left, node.right];
-		for(var i = 0; i < children.length; i++)
+		if(node.right == null && node.left == null)
 		{
-			svg.append("line")
-			.attr("x1", scales[0](children[i].x))
-			.attr("x2", scales[0](children[i].x))
-			.attr("y1",  scales[1](node.height))
-			.attr("y2", scales[1](children[i].height))
-			.attr("id", children[i].id)
-			.attr("orient", "v")
-			.attr("class", "normal");
+			node.x = n_count;
+			n_count++;
+			return;
 		}
+		if(node.left.x == null)
+			set_x(node.left);
+		if(node.right.x == null)
+			set_x(node.right);
+		node.x = (node.right.x + node.left.x)/2 ;
+		return;
+	}
+	var set_scale = function(bucket_final, padding, width, height)
+	{
+		var n_leaves = bucket_final.val_inds.length;
+		var xScale = d3.scale.linear()
+					   .domain([0, n_leaves-1])
+					   .range([padding, width-padding]);
+		var yScale = d3.scale.linear()			   
+						.domain([0, bucket_final.height])
+						.range([height-padding, padding]);
+		return [xScale, yScale];
+	}
+
+	var find_node = function(node, id)
+	{	
+		if(node != null)
+		{
+			if(node.id == id)
+				return node;
+			else 
+				return find_node(node.left,id) || find_node(node.right, id);
+		}
+		return null;
+	}
+
+	var check_ele = function(ele, ind_arr)
+	{
+		for(var i = 0; i < ind_arr.length; i++)
+		{
+			if(ind_arr[i] == ele)
+				return true;
+		}
+		return false;
+	}
+
+	var change_prop = function(root_node, id_and_type, svg, cla)
+	{
+		//console.log(root_node);
+		node_req = find_node(root_node, id_and_type[0]);
+		inds = [];
+		var prop = -1;
 		
-		draw_dendo(node.left, svg, scales, padding);
-		draw_dendo(node.right, svg, scales, padding);
+		add_ids(node_req, inds);
+		
+		if(id_and_type[1] == 'h')
+			prop = id_and_type[0];
+
+		set_color(svg, [], cla, -1);
+		set_color(svg, inds, cla, prop);
+
 	}
 
-   	if(node.left == null && node.right == null)
-   	{
-	   	svg.append("text")
-	   	.attr("x", scales[0](node.x ))
-	   	.attr("y", scales[1](node.height) + padding)
-	   	.text(String(node.id))
-	   	.attr("text-anchor", "middle")
-	   	//.attr("font-family", "sans-serif")
-   		//.attr("font-size", scale)
-   		.attr("fill", "red");
-   		//.attr("transform", "rotate(45 -10 10)");
-   }
-
-	return;
-}
-
-var find_node = function(node, id)
-{	
-	if(node != null)
+	var set_click = function(root, svg, cla)
 	{
-		if(node.id == id)
-			return node;
-		else 
-			return find_node(node.left,id) || find_node(node.right, id);
+		d3.selectAll('line').on('click', function(d){
+		change_prop(root, [this.getAttribute('id'), this.getAttribute('orient')], svg, cla);});
 	}
-	return null;
-}
 
-var check_ele = function(ele, ind_arr)
-{
-	for(var i = 0; i < ind_arr.length; i++)
+	var add_ids = function(node, inds)
 	{
-		if(ind_arr[i] == ele)
-			return true;
+		inds.push(node.id);
+		if(node.left != null)
+			add_ids(node.left, inds);
+		if(node.right != null)
+			add_ids(node.right, inds);
 	}
-	return false;
-}
-var change_prop = function(root_node, id_and_type, svg, cla)
-{
-	//console.log(root_node);
-	node_req = find_node(root_node, id_and_type[0]);
-	inds = [];
-	var prop = -1;
-	
-	add_ids(node_req, inds);
-	
-	if(id_and_type[1] == 'h')
-		prop = id_and_type[0];
 
-	set_color(svg, [], cla, -1);
-	set_color(svg, inds, cla, prop);
-
-}
-
-var set_click = function(root, svg, cla)
-{
-	d3.selectAll('line').on('click', function(d){
-	change_prop(root, [this.getAttribute('id'), this.getAttribute('orient')], svg, cla);});
-}
-
-var add_ids = function(node, inds)
-{
-	inds.push(node.id);
-	if(node.left != null)
-		add_ids(node.left, inds);
-	if(node.right != null)
-		add_ids(node.right, inds);
-}
-
-var set_color = function(svg, inds, cla, prop)
-{
-	svg.selectAll('line').attr("class", function(d)
+	var set_color = function(svg, inds, cla, prop)
 	{
-		return check_ele(this.id, inds) ? cla[1]:cla[0];
-	});
+		svg.selectAll('line').attr("class", function(d)
+		{
+			return check_ele(this.id, inds) ? cla[1]:cla[0];
+		});
+	}
+
+	var draw_dendo = function(node, g, height, scales, padding)
+	{
+		//var height = svg.style()[0][0].getAttribute("height");
+		if(node.right != null && node.left != null)
+		{
+			g.append("line")
+			.attr("x1", scales[0](node.left.x))
+			.attr("x2", scales[0](node.right.x))
+			.attr("y1", scales[1](node.height))
+			.attr("y2", scales[1](node.height))
+			.attr("id", node.id)	
+			.attr("orient", "h")
+			.attr("class", "normal");
+
+			var children = [node.left, node.right];
+			for(var i = 0; i < children.length; i++)
+			{
+				g.append("line")
+				.attr("x1", scales[0](children[i].x))
+				.attr("x2", scales[0](children[i].x))
+				.attr("y1",  scales[1](node.height))
+				.attr("y2", scales[1](children[i].height))
+				.attr("id", children[i].id)
+				.attr("orient", "v")
+				.attr("class", "normal");
+			}
+			
+			draw_dendo(node.left, g, height, scales, padding);
+			draw_dendo(node.right, g, height, scales, padding);
+		}
+
+	   	if(node.left == null && node.right == null)
+	   	{
+		   	g.append("text")
+		   	.attr("x", scales[0](node.x ))
+		   	.attr("y", scales[1](node.height) + padding)
+		   	.text(String(node.id))
+		   	.attr("text-anchor", "middle")
+		   	//.attr("font-family", "sans-serif")
+	   		//.attr("font-size", scale)
+	   		.attr("fill", "red");
+	   		//.attr("transform", "rotate(45 -10 10)");
+	   }
+
+		return;
+	}
+
+	set_x(node);
+	var width = svg[0][0].getAttribute('width');
+	var height = svg[0][0].getAttribute('height');
+	var scales = set_scale(node, padding, width, height);
+	draw_dendo(node, g, height, scales, padding);
+	g.attr("transform", "rotate(-90 100 "+ height+")");
+	set_click(node, svg,  ['normal', 'selected']);
+
 }
 
 

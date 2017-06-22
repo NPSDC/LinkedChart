@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<script src="../../linked-charts/build/linked-charts.js" type="text/javascript"></script>
 		<script src="iris.js" type="text/javascript"></script>
 		<script src="iris_temp.js" type="text/javascript"></script>
 		<script src = "linked_list.js" type="text/javascript"></script>
@@ -28,10 +29,17 @@
 			 .attr("width", width )
 			 .attr("height", height);
 
-			set_x(b[0]);
-			scales = set_scale(b[0], padding, width, height);
-			draw_dendo(b[0], svg, scales, padding);
-			set_click(b[0], svg,  ['normal', 'selected']);
+			da = iris_temp
+			var data = new Array(da.length);
+			keys = Object.keys(da[0])
+			for(var i = 0; i < da.length; i++)
+			{
+				data[i] = new Array(keys.length);
+				for(var j = 0; j < keys.length; j++)
+					data[i][j] = da[i][keys[j]];
+			}
+			hclus = hcluster(data);
+			drawDendo(hclus[0], svg, padding);
 			//Setting the data
 			/*var mytree = new Tree(1);
 			mytree.add_right(3, 2);
