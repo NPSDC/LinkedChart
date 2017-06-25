@@ -100,7 +100,7 @@ var hcluster = function(data)
 			cur_count += 1;
 			//break;
 		}
-		return bucket_copy
+		return bucket_copy[0];
 	}
 	var dist_mat = calc_dist(data)
 	return merge(dist_mat)
