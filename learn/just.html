@@ -24,7 +24,9 @@
 		</style>
 	</head>
 	<body>
-		<div id = "dend"></div>
+		<div id = "dend1"></div>
+		<div id = "heatmap"></div>
+		<div id = 'dend2'></div>
 		<!--table>
 		<tr>
 		<td id = "heatmap" width = "500" height = "500"></td>
@@ -32,7 +34,7 @@
 		<script>
 			var width = 1000;
 			var height = 400;
-			var padding = 20;
+			var padding = {left:20, top:20};
 		
 			/*var svg = d3.select("body").append("svg")
 			 .attr("width", width )
@@ -49,19 +51,39 @@
 			}
 			//hclus = hcluster(data);
 
-			/*var hc = lc.heatmapChart()
-				.nrows(data.length)
-				.ncols(data[0].length)
+			var hc = lc.heatmapChart()
+				.nrows(data[0].length)
+				.ncols(data.length)
 				.value(function(rowId, colId)
 				{
-					return data[rowId][colId]
+					return data[colId][rowId]
 				})
-				.place('#heatmap');*/
+				//.cluster('Row')
+				.cluster('Col')
+				.cluster('Row')
+				.place('#heatmap');
+				
 
-			var dend = dendoGram(data)
-						.place("#dend")
+			//var dend1 = dendoGram(data)
+			//			.place("#dend1")
 
-			hclus = hcluster(data);
+			//Ask Svetlana
+			//1)data argument has been added
+			//2) Clustering is done
+			//3)How exactly reorder works
+			//4)If data changes then only way to get back is using refresh
+
+
+			//var sv = dend1.svg.attr("transform", "rotate(-90 300 //150)");
+
+			/*var dend2 = dendoGram(data)
+						.place("#dend2");
+			dend2.svg*/
+			//dend2.g.attr("transform", "rotate(-90 100 0)")
+			//.attr("transform", "translate(100)" )
+				//.attr("transform", "rotate(-90 0 0)");
+
+			//hclus = hcluster(data);
 			//drawDendo(hclus, svg, padding);
 			//Setting the data
 			/*var mytree = new Tree(1);

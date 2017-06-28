@@ -11,44 +11,56 @@ function createGround(width, height){
     return result;
 }
 
+
+var transpose = function(data)
+{
+    return Object.keys(data[0]).map(function (c) {
+    return data.map(function (r) {
+        return r[c];
+    });
+});
+}
+
+var calculate_euclidean = function(d1, d2)
+{
+	var sum = 0;
+	for(var i = 0; i < d1.length; i++)
+		sum += Math.pow((d1[i] - d2[i]), 2)
+	return Math.sqrt(sum);
+}
+
+var calc_dist = function(data, method)
+{
+	method = method || 'euclidean'
+	var keys = Object.keys(data);
+	var dist = new Array(keys.length);
+	for(var i = 0; i < keys.length; i++)
+		dist[i] = new Array(keys.length);
+	if(method == 'euclidean')
+	{
+		for(var i = 0; i < keys.length; i++)
+		{
+			for(var j = i; j < keys.length; j++)
+			{
+				var d = calculate_euclidean(data[keys[i]], data[keys[j]])
+				dist[i][j] = d;
+				dist[j][i] = d;
+			}
+		}
+	}
+	return(dist);
+}
+
 //var data = createGround(10,20);
 
 
 var hcluster = function(data)
 {
 	this.bucket = []
+	var keys = Object.keys(data)
 	//Initialisation
-	for(var i = 0; i < data.length; i++)
-		this.bucket[i]  = new Node(i, data[i]);	
-
-	var calculate_euclidean = function(d1, d2)
-	{
-		var sum = 0;
-		for(var i = 0; i < d1.length; i++)
-			sum += Math.pow((d1[i] - d2[i]), 2)
-		return Math.sqrt(sum);
-	}
-
-	var calc_dist = function(data, method)
-	{
-		method = method || 'euclidean'
-		var dist = new Array(data.length);
-		for(var i = 0; i < data.length; i++)
-			dist[i] = new Array(data.length);
-		if(method == 'euclidean')
-		{
-			for(var i = 0; i < data.length; i++)
-			{
-				for(var j = i; j < data.length; j++)
-					{
-						var d = calculate_euclidean(data[i], data[j])
-						dist[i][j] = d;
-						dist[j][i] = d;
-					}
-			}
-		}
-		return(dist);
-	}
+	for(var i = 0; i < keys.length; i++)
+		this.bucket[i]  = new Node(i, data[keys[i]]);	
 
 	var bucket_dist = function(el1_inds, el2_inds, dist_mat)
 	{
@@ -67,7 +79,7 @@ var hcluster = function(data)
 	
 	var merge = function(dist_mat)
 	{
-		var cur_count = bucket.length;
+		var cur_count = this.bucket.length;
 		var bucket_copy = JSON.parse(JSON.stringify(this.bucket));
 		while(bucket_copy.length >  1)
 		{
@@ -102,7 +114,8 @@ var hcluster = function(data)
 		}
 		return bucket_copy[0];
 	}
-	var dist_mat = calc_dist(data)
-	return merge(dist_mat)
+	var dist_mat = calc_dist(data);
+	
+	return merge(dist_mat);
 }
 //console.log(data);

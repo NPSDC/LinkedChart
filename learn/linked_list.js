@@ -82,7 +82,7 @@ function Tree(id)
 
 }
 
-var dendoGram = function(data)
+var dendoGram = function(hclus_ob)
 {
 	var dendogram = lc.base();
 	/*dendogram.add_property("check_heatmap", function(heatmap, prop_name, prop_other, defaultval)
@@ -101,17 +101,17 @@ var dendoGram = function(data)
 	dendogram.add_property("orientation", "h")
 		.add_property("height", 100)
 		.add_property("width", 300)
-		.add_property("data", data)
-		.add_property("nlabels", data.length)
+		.add_property("hclus", hclus_ob)
+		.add_property("nlabels", hclus_ob.val_inds.length)
 		.add_property("labIds", function(){return undefined})
-		.add_property("padding", 20)
+		.add_property("padding", {left:20, top:20, bottom:20, right:20})
+		.add_property("heatmap")
 		.add_property("css_class", ['normal', 'selected']);
 
 	dendogram.nlabels("_override_", "labIds", function()
 	{
 		return d3.range(dendogram.get_nlabels());
 	})
-	dendogram.add_property("hclus", hcluster(dendogram.get_data()));
 	
 	var n_count = 0;		 
 	dendogram.set_x = function(node)
@@ -131,20 +131,28 @@ var dendoGram = function(data)
 	}
 	dendogram.set_scale = function()
 	{
+		var t = -1;
+		var rev_height = 0;
 		var bucket_final = this.get_hclus(),
 		 	padding = this.get_padding(),
 		 	width = this.get_width(),
 		 	height = this.get_height();
 		var n_leaves = bucket_final.val_inds.length;
+		var box_width = (width - padding.right - padding.left)/n_leaves;
 		var xScale = d3.scaleLinear()
 					   .domain([0, n_leaves-1])
-					   .range([padding, width-padding]);
+					   .range([padding.left + box_width/2, 
+					   	width - padding.right - box_width/2]);
+		if(dendogram.get_orientation() == 'v')
+		{	rev_height = height; t = 1;}
+
 		var yScale = d3.scaleLinear()			   
 						.domain([0, bucket_final.height])
-						.range([height-padding, padding]);
+						.range([height+padding.top*t-rev_height,
+						 rev_height-padding.bottom*t]);
 		return [xScale, yScale];
 	}
-	dendogram.draw_dendo = function(node, g, scales, padding)
+	dendogram.draw_dendo = function(node, g, scales)
 	{
 		//var height = svg.style()[0][0].getAttribute("height");
 		if(node.right != null && node.left != null)
@@ -171,10 +179,10 @@ var dendoGram = function(data)
 				.attr("class", "normal");
 			}
 			
-			this.draw_dendo(node.left, g, scales, padding);
-			this.draw_dendo(node.right, g, scales, padding);
+			this.draw_dendo(node.left, g, scales);
+			this.draw_dendo(node.right, g, scales);
 		}
-
+/*
 	   	if(node.left == null && node.right == null)
 	   	{
 		   	g.append("text")
@@ -186,7 +194,7 @@ var dendoGram = function(data)
 	   		//.attr("font-size", scale)
 	   		.attr("fill", "red");
 	   		//.attr("transform", "rotate(45 -10 10)");
-	   }
+	   }*/
 
 		return;
 	}
@@ -253,26 +261,51 @@ var dendoGram = function(data)
 		return dendogram;
 	}
 
-		
-	
-	dendogram.put_static_content = function(element)
+	dendogram.draw = function()
 	{
-		dendogram.container = element.append('div')
-			.style("position", "relative")
-		dendogram.svg = dendogram.container.append('svg')
-						.attr("width", dendogram.get_width())
-						.attr("height", dendogram.get_height());
-		dendogram.g = dendogram.svg.append('g');
-		dendogram.draw_dendo(this.get_hclus(), this.g, this.get_scales(), this.get_padding() )
-		dendogram.set_click(this.get_hclus(), this.g, this.get_css_class())		
-//		return dendogram;		
+		var orientation = dendogram.get_orientation();
+		dendogram.svg.select('g#'+orientation).remove()
+		dendogram.g = dendogram.svg.append('g')
+						.attr('id', dendogram.orientation());
+		dendogram.set_x(dendogram.get_hclus());
+		n_count = 0;
+		dendogram.add_property("scales", dendogram.set_scale());
+		console.log(dendogram.g);
+		dendogram.draw_dendo(dendogram.get_hclus(), dendogram.g, dendogram.get_scales() )
+		if(dendogram.get_orientation() == 'v')
+		{
+			var temp = (dendogram.get_padding().left*-1).toString();
+			dendogram.g.attr("transform", "rotate(90 0 0) translate(0"+temp+")");
+		}
+		dendogram.set_click(dendogram.get_hclus(), dendogram.g, dendogram.get_css_class())		
+		return dendogram;
 	}	
 	
-	dendogram.place = function( element ) 
+	dendogram.put_static_content = function(element, svg)
 	{
-	    if( element === undefined )
+		if(element != null)
+			dendogram.container = element.append('div')
+			.style("position", "relative")
+		if(svg == null)
+		{
+			var svg = dendogram.container.append('svg')
+						.attr("width", dendogram.get_width())
+						.attr("height", dendogram.get_height());
+		}
+		dendogram.svg = svg
+		dendogram.draw();
+		return dendogram;		
+	}	
+	
+	dendogram.place = function( element, svg, heat ) 
+	{
+		
+		if(heat == true)		
+			return dendogram.put_static_content(element, svg);
+	    else if( element === undefined )
 	      element = "body";
-	    if( typeof( element ) == "string" ) 
+
+	    else if( typeof( element ) == "string" ) 
 	    {
 	      var node = element;
 	      element = d3.select( node );
@@ -280,184 +313,15 @@ var dendoGram = function(data)
 	        throw "Error in function 'place': DOM selection for string '" +
 	          node + "' did not find a node."
 	  	}
-		dendogram.put_static_content(element);
+		dendogram.put_static_content(element, svg);
 		return dendogram;
     	//chart.update();
     	//chart.afterUpdate();
   	}
-
-  	dendogram.set_x(dendogram.get_hclus());
-	dendogram.add_property("scales", dendogram.set_scale());
   	//dendogram.set_x
 	return dendogram;
 }
 
 
-var drawDendo = function(node, svg, padding)
-{
-	/*var check_heatmap = function(dend, heatmap, prop_name, default)
-	{
-		if(heatmap != null)
-			dend.add_property(prop_name, heatmap[[prop_name]]);
-		else
-			dend.add_property(prop_name, default);
-		return dend;
-	}
-	dendogram = lc.base()
-		.check_heatmap(dend, heatmap, "nrows");
-		/*.add_property("ncols")
-		.add_property("margin", check_heatmap(heatmap, prop_name, { top: 15, right: 10, bottom: 50, left: 50 }))
-		.*/
-
-	var height = svg.attr('height');
-	var g = svg.append('g');
-	var n_count = 0;
-
-
-	var set_x =	function(node)
-	{
-		if(node.right == null && node.left == null)
-		{
-			node.x = n_count;
-			n_count++;
-			return;
-		}
-		if(node.left.x == null)
-			set_x(node.left);
-		if(node.right.x == null)
-			set_x(node.right);
-		node.x = (node.right.x + node.left.x)/2 ;
-		return;
-	}
-	var set_scale = function(bucket_final, padding, width, height)
-	{
-		var n_leaves = bucket_final.val_inds.length;
-		var xScale = d3.scaleLinear()
-					   .domain([0, n_leaves-1])
-					   .range([padding, width-padding]);
-		var yScale = d3.scaleLinear()			   
-						.domain([0, bucket_final.height])
-						.range([height-padding, padding]);
-		return [xScale, yScale];
-	}
-
-	var find_node = function(node, id)
-	{	
-		if(node != null)
-		{
-			if(node.id == id)
-				return node;
-			else 
-				return find_node(node.left,id) || find_node(node.right, id);
-		}
-		return null;
-	}
-
-	var check_ele = function(ele, ind_arr)
-	{
-		for(var i = 0; i < ind_arr.length; i++)
-		{
-			if(ind_arr[i] == ele)
-				return true;
-		}
-		return false;
-	}
-
-	var change_prop = function(root_node, id_and_type, svg, cla)
-	{
-		//console.log(root_node);
-		node_req = find_node(root_node, id_and_type[0]);
-		inds = [];
-		var prop = -1;
-		
-		add_ids(node_req, inds);
-		
-		if(id_and_type[1] == 'h')
-			prop = id_and_type[0];
-
-		set_color(svg, [], cla, -1);
-		set_color(svg, inds, cla, prop);
-
-	}
-
-	var set_click = function(root, svg, cla)
-	{
-		d3.selectAll('line').on('click', function(d){
-		change_prop(root, [this.getAttribute('id'), this.getAttribute('orient')], svg, cla);});
-	}
-
-	var add_ids = function(node, inds)
-	{
-		inds.push(node.id);
-		if(node.left != null)
-			add_ids(node.left, inds);
-		if(node.right != null)
-			add_ids(node.right, inds);
-	}
-
-	var set_color = function(svg, inds, cla, prop)
-	{
-		svg.selectAll('line').attr("class", function(d)
-		{
-			return check_ele(this.id, inds) ? cla[1]:cla[0];
-		});
-	}
-
-	var draw_dendo = function(node, g, scales, padding)
-	{
-		//var height = svg.style()[0][0].getAttribute("height");
-		if(node.right != null && node.left != null)
-		{
-			g.append("line")
-			.attr("x1", scales[0](node.left.x))
-			.attr("x2", scales[0](node.right.x))
-			.attr("y1", scales[1](node.height))
-			.attr("y2", scales[1](node.height))
-			.attr("id", node.id)	
-			.attr("orient", "h")
-			.attr("class", "normal");
-
-			var children = [node.left, node.right];
-			for(var i = 0; i < children.length; i++)
-			{
-				g.append("line")
-				.attr("x1", scales[0](children[i].x))
-				.attr("x2", scales[0](children[i].x))
-				.attr("y1",  scales[1](node.height))
-				.attr("y2", scales[1](children[i].height))
-				.attr("id", children[i].id)
-				.attr("orient", "v")
-				.attr("class", "normal");
-			}
-			
-			draw_dendo(node.left, g, scales, padding);
-			draw_dendo(node.right, g, scales, padding);
-		}
-
-	   	if(node.left == null && node.right == null)
-	   	{
-		   	g.append("text")
-		   	.attr("x", scales[0](node.x ))
-		   	.attr("y", scales[1](node.height) + padding)
-		   	.text(String(node.id))
-		   	.attr("text-anchor", "middle")
-		   	//.attr("font-family", "sans-serif")
-	   		//.attr("font-size", scale)
-	   		.attr("fill", "red");
-	   		//.attr("transform", "rotate(45 -10 10)");
-	   }
-
-		return;
-	}
-
-	set_x(node);
-	var width = svg.attr('width');
-	var height = svg.attr('height');
-	var scales = set_scale(node, padding, width, height);
-	draw_dendo(node, g, scales, padding);
-	//g.attr("transform", "rotate(-90 100 "+ height+")");
-	set_click(node, svg,  ['normal', 'selected']);
-
-}
 
 //Issue of Memory vs time
