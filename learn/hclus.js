@@ -61,7 +61,6 @@ var hcluster = function(data)
 	//Initialisation
 	for(var i = 0; i < keys.length; i++)
 		this.bucket[i]  = new Node(i, data[keys[i]]);	
-
 	var bucket_dist = function(el1_inds, el2_inds, dist_mat)
 	{
 		var max_dist = dist_mat[el1_inds[0]][el2_inds[0]];
@@ -115,7 +114,7 @@ var hcluster = function(data)
 		return bucket_copy[0];
 	}
 	var dist_mat = calc_dist(data);
-	
+	//console.log(dist_mat[0])
 	return merge(dist_mat);
 }
 //console.log(data);

@@ -1,4 +1,17 @@
-
+var intersect = function(ar1, ar2)
+{
+	ar_int = []
+	var ar = [ar1, ar2]
+	var l = [ar1.length, ar2.length];
+	var ind = l.indexOf(Math.min.apply(null,l))
+	var ind_large = ind == 0 ? 1:0
+	for(var i = 0; i < ar[ind].length; i++)
+	{
+		if(ar[ind_large].indexOf(ar[ind][i]) != -1)
+			ar_int.push(ar[ind][i])
+	}
+	return ar_int
+}
 
 function List(){
 	this.start = null;
@@ -252,6 +265,30 @@ var dendoGram = function(hclus_ob)
 		dendogram.set_color(g, [], cla, -1);
 		dendogram.set_color(g, inds, cla, prop);
 
+		var hcl = dendogram.get_heatmap()
+		if(hcl != undefined)
+		{
+			var orientation = dendogram.get_orientation();
+			if(orientation == 'h')
+			{
+				var inds_int = intersect(inds.map(function(e) {return e.toString()}),
+					hc.get_colIds())
+				hcl.clusterColIds(inds_int)
+				hcl.clusterRowIds(hc.get_dispRowIds());
+				hcl.cluster('Row')
+				hcl.get_dendogramRow().draw();
+			}
+			if(orientation == 'v')
+			{
+				var inds_int = intersect(inds.map(function(e) {return e.toString()}),
+					hc.get_rowIds())
+				hcl.clusterRowIds(inds_int)
+				hcl.clusterColIds(hc.get_dispColIds());
+				hcl.cluster('Col')
+				hcl.get_dendogramCol().draw();
+			}
+		}
+
 	}
 
 	dendogram.set_click = function(root, g, cla)
@@ -270,7 +307,6 @@ var dendoGram = function(hclus_ob)
 		dendogram.set_x(dendogram.get_hclus());
 		n_count = 0;
 		dendogram.add_property("scales", dendogram.set_scale());
-		console.log(dendogram.g);
 		dendogram.draw_dendo(dendogram.get_hclus(), dendogram.g, dendogram.get_scales() )
 		if(dendogram.get_orientation() == 'v')
 		{
@@ -325,3 +361,4 @@ var dendoGram = function(hclus_ob)
 
 
 //Issue of Memory vs time
+//Think of 
